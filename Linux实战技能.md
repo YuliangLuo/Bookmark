@@ -342,6 +342,8 @@ chmod 4755 对应 rwsr-xr-x
 如 /tmp
 chmod 1777 对应drwxrwxrwt.
 
+因为SUID对应八进制数字是4，SGID对于八进制数字是2，则“4755”表示设置SUID权限，“6755”表示同时设置SUID、SGID权限。
+
 ## 系统管理篇
 
 ### 网络管理
@@ -434,8 +436,8 @@ ss -ntpl
 - service network start|stop|restart
 - chkconfig --list network
 - systemctl list-unit-files NetworkManager.service
-- systemctl startlstoplrestart NetworkManger
-- systemctl enable/disable NetworkManger
+- systemctl start|stop|restart NetworkManager
+- systemctl enable/disable NetworkManager
 
 查看网络状态：
 - service network status
@@ -674,11 +676,11 @@ screen -r sessionid 恢复会话
 
 2. 系统日志
 常见的系统日志
-- /var/log
-- message
-- dmesg
-- cron
-- secure
+- /var/log 查看日志
+- message 查看信息
+- dmesg 内核运行相关信息
+- cron 查看定时任务
+- secure 查看安全日志
 
 #### 服务管理工具systemctl
 1. 服务（提供常见功能的守护进程）集中管理工具
@@ -949,7 +951,7 @@ source ./filename.sh 内建命令会对当前环境产生影响
 ```
 read var < /path/to/a/file
 ```
-输出重定向符号“>”（输出重定向） “>>”（追加重定向） “2>”（错误重定向） “&>”（全部重定向）&1 引用重定向
+输出重定向符号“>”（输出重定向，原有内容会清空） “>>”（追加重定向，追加内容） “2>”（错误重定向） “&>”（全部重定向）&1 引用重定向
 ```
 echo 123 > /path/to/a/file
 ```
@@ -1296,30 +1298,39 @@ flock -xn "/tmp/f.lock" -c "/root/a.sh" 排它锁放在/tmp下
 - ^ 匹配开头
 - $ 匹配结尾
 - \ 转义后面的特殊字符
+
 ```
 让转义字符生效加引用
 grep "\." anaconda-ks.cfg
 ```
 
 #### 扩展元字符
-- + 匹配前面的正则表达式至少出现一次
+- + 匹配前面的正则表达式至少出现一次 前面要加r
 - ? 匹配前面的正则表达式出现零次或一次
 - | 匹配它前面或后面的正则表达式
 
 #### 文件的查找命令find
 - find 路径 查找条件[补充条件]
+```bash
+find /etc -name passwd
+find /etc -regex .*wd
+```
 
 #### 文本内容的过滤（查找）grep
 - grep 选项 文本文件1 [...文本文件n]
 - 常用选项
+
 ```
 -i 忽略大小写
 -r 递归读取每一个目录下的所有文件
 ```
 
-### 行编辑器sed和AWK介绍
+分割并统计字符数目：
+```
+cut -d ":" -f7 /etc/passwd | uniq -c
+```
 
-1
+### 行编辑器sed和AWK介绍
 
 #### 行编辑器介绍
 - Vim和sed、AWK的区别
@@ -1353,9 +1364,11 @@ sed的基本工作方式是：
 - 替换命令s
 sed的替换命令s：
 ```
-sed `s/old/new` filename
-sed -e `s/old/new` -e `s/old/new/` filename
-sed -i `s/old/new/` `s/old/new/` filename
+1. sed `s/old/new` filename
+2. sed -e `s/old/new` -e `s/old/new/` filename 不替换原始文件
+或 sed -e `s/old/new`;`s/old/new/` filename
+3. sed -i `s/old/new/` `s/old/new/` filename 替换原始文件
+4. sed 's!/!abc!' filename
 ```
 
 - 使用正则表达式
@@ -1397,7 +1410,11 @@ w file将模式空间的内容写入到文件
 
 - 分组 
 寻址可以匹配多条命令
+```
 /regular/{s/old/new/;s/old/new/}
+sed -r 's/(aa)|(bb)/!/' filename
+sed -r 's/(a.*b)/\1:\1/' filename
+```
 
 - 脚本文件
 可以将选项保存为文件，使用-f加载脚本文件
@@ -1420,17 +1437,28 @@ sed -f sedscript filename
 追加命令a
 插入命令i
 更改命令c
+```
+sed '/ab/a hello' filename
+sed '/ab/i hello' filename
+sed '/ab/c hello' filename
+```
 
 - 打印
-打印命令p
+打印命令p 
 
 - 下一行
 下一行命令n
+```
+head -5 /etc/passwd | sed -n 's/root/!!!!/p'
+```
 打印行号命令=
 
 - 读文件和写文件
 读文件命令r
 写文件命令w
+```
+head -5 /etc/passwd | sed -n 's/root/!!!!/w /tmp/a.txt'
+```
 
 - 退出命令
 退出命令q
@@ -1444,6 +1472,18 @@ sed -f sedscript filename
 N将下一行加入到模式空间
 D删除模式空间中的第一个字符到第一个换行符
 P打印模式空间中的第一个字符到第一个换行符
+```
+b.txt
+hell
+o bash hel
+lo bash
+sed 'N;s/\n//;s/hello bash/hello sed\n/;P;D' b.txt
+```
+
+交互式输入文本内容
+```
+cat > b.txt << EOF
+```
 
 #### sed的保持空间
 什么是保持空间：
@@ -1451,9 +1491,14 @@ P打印模式空间中的第一个字符到第一个换行符
 文本文件->模式空间->保持空间
 
 保持空间命令
-- h和H将模式空间存放到保持空间
+- h和H将模式空间内容存放到保持空间
 - g和G将保持空间内容取出到模式空间
 - x交换模式空间和保持空间内容
+```
+cat -n /etc/passwd | head -6 | sed -n '1h;1!G;$!x;$p'
+cat -n /etc/passwd | head -6 | sed -n 'G;h;$p'
+cat -n /etc/passwd | head -6 | sed -n '1!;G;h;$!d'
+```
 
 ####  AWK
 - AWK和sed的区别
@@ -1469,17 +1514,17 @@ AWK用于“比较规范”的文本处理，用于统计数量并输出指定�
 - AWK的字段引用和分离
 记录和字段：
 每行称作AWK的记录
-使用空格、制表符分隔开的单次称作字段
+使用空格、制表符分隔开的单词称作字段
 可以自己指定分隔的字段
 
 字段的引用：
 awk中使用$1 $2...$n表示每一个字段
 ```
-awk `{print $1,$2,$3}` filename
+awk '{print $1,$2,$3}' filename
 ```
 awk可以使用-F选项改变字段分隔符，分隔符可以使用正则表达式
 ```
-awk -F ',' `{print $1,$2,#3}` filename
+awk -F "," '{print $1,$2,$3}' filename
 ```
 
 #### AWK的表达式
@@ -1502,10 +1547,21 @@ var3= $1
 ```
 
 - 系统变量
-FS和OFS字段分隔符，OFS表示输出的字段分隔符
+F: 分隔符
+FS和OFS字段分隔符，OFS表示输出的字段分隔符，用于变量内
 RS记录分隔符
 NR和FNR行数
 NF字段数量，最后一个字段内容可以用$NF取出
+
+```
+读入文件之前要做的准备工作
+head -5 /etc/passwd | awk 'BEGIN{FS=":"}{print NR}' 
+head -5 /etc/passwd | awk 'BEGIN{FS=":";OFS="-"}{print NR}' 
+head -5 /etc/passwd | awk '{print NR,$0}'
+head -5 /etc/passwd | awk '{print FNR,$0}'
+head -5 /etc/passwd | awk 'BEGIN{FS=":"}{print NF}'
+head -5 /etc/passwd | awk 'BEGIN{FS=":"}{print $NF}' 输出最后一个字段的内容
+```
 
 - 关系操作符
 关系操作符
@@ -1561,6 +1617,13 @@ for(初始值；循环判断条件；累加)
 - 数组的遍历
 for(变量in数组名)
 使用数组名[变量]的方式依次对每个数组的元素进行操作
+```
+awk '{ sum=0; for(column=2;column<=NF;column++) sum+=$column;average[$1]=sum/(NF-1)}END{}'
+awk '{ sum=0; for(column=2;column<=NF;column++) sum+=$column;
+	average[$1]=sum/(NF-1)}END{ for( user in average) ; print user,average[user]}'
+awk '{ sum=0; for(column=2;column<=NF;column++) sum+=$column;
+	average[$1]=sum/(NF-1)}END{ for( user in average) sum2+=average[user] ;print sum2/NR}'
+```
 
 - 删除数组
 delete数组[下标]
@@ -1568,6 +1631,38 @@ delete数组[下标]
 - 命令行参数数组
 ARGC
 ARGV
+```
+BEGIN{
+	for(x=0;x<ARGC;x++)
+	   print ARGV[x]
+	print ARGC
+}
+```
+
+数组示例
+```
+{
+	sum=0
+	for(column = 2; column <=NF;column++)
+		  sum += $column
+
+	average[$1] = sum/(NF-1)
+
+	sum_all += average[$1]
+
+}
+END{
+	average_all = sum_all/NR
+	for( user in average )
+		  if( average[user] > average_all )
+		  		above++
+		  else
+		  		below++
+
+	print "above",above
+	print "below",below
+}
+```
 
 #### AWK的函数
 - 算术函数
@@ -1591,3 +1686,465 @@ function 函数名（参数）{
    return awk变量
 }
 ```
+
+## 服务管理
+
+### 防火墙
+
+#### 防火墙分类
+
+1. 软件防火墙和硬件防火墙
+
+2. 包过滤防火墙和应用防火墙
+CentOS6默认的防火墙是iptables
+CentOS7默认的防火墙是firewallD（底层使用netfilter）
+
+iptables命令总体用法：
+1. table
+```
+-t nat, filter, mangle, raw
+```
+2. command
+```
+-A add一条规则到指定链接末尾
+-D delete一条规则按号或内容删除
+-I insert规则到指定链接中，默认第一行
+-R replace指定链接中的某条规则按顺序号来
+-L list出指定链接中的所有规则
+-F flush清空
+-N new一条自定义的规则链接
+-X 删除指定表中用户自定义的规则链接
+-P policy设置指定链接中的默认策略
+```
+3. chain
+```
+INPUT
+OUTPUT
+FORWARD
+PREROUTING
+POSTROUTING
+```
+4. parameter
+```
+-p protocol指定协议tcp,udp,icmp之一
+-s source address指定源地址
+-d dest address
+-i 指定数据包从哪个设备进入
+-o 指定数据包从哪个设备输出
+-m 指定数据包规则要使用的模块，一般模块会有一些扩展功能/br> --sport
+指定数据包源端口号
+--dport 指定数据包目标端口号
+```
+5. target
+-j ACCEPT 允许数据包通过
+-j DROP 直接丢弃数据包
+-j REJECT 拒绝数据包通过，必要时会返回一个响应
+
+#### iptables的表和链
+1. 规则表
+filter nat mangle raw
+
+2. 规则链
+INPUT OUTPUT FORWARD
+PREROUTING POSTROUTING
+
+#### iptables的filter表
+iptables -t filter命令 规则链 规则
+1. 命令
+-L
+-A -I 
+-D -F -P
+-N -X -E
+
+2. 规则
+-P
+-s -d
+-i -o
+-j
+
+用完iptables -F后改回来用iptables -P INPUT ACCEPT
+
+#### iptables的nat表
+iptables -t nat 命令 规则链 规则
+PREROUTING 目的地址转换
+POSTROUTING 源地址转换
+
+```
+iptables -t nat -A PREROUTING -i ens33 -d 114.115.116.117 -p tcp --dport 80
+-j DNAT --to-destination 10.0.0.1
+iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o ens331 -j SNAT --to-source
+111.112.113.114
+```
+
+#### iptables的配置文件
+/etc/sysconfig/iptables
+Centos6
+	service iptables save|start|stop|restart
+Centos7
+	yum install iptables-services
+
+#### firewallD服务
+1. firewallD的特点
+支持区域“zone”概念
+firewall-cmd
+
+```
+firewall-cmd --state 查看运行状态
+firewall-cmd --list-all 查看运行的详情
+firewall-cmd --zone=public --list-interfaces
+firewall-cmd --list-ports 查看端口
+firewall-cmd --list-services 支持的服务
+firewall-cmd --get-zones 可选的区域
+firewall-cmd --get-default-zone 默认激活的区域
+firewall-cmd --get-active-zone 正在活跃的区域
+firewall-cmd --add-service=https 添加服务
+firewall-cmd --add-port=81/tcp 添加协议及端口
+firewall-cmd --add-port=81/tcp --permanent 开机启动
+firewall-cmd --remove-source=10.0.0.1 移除源ip
+```
+
+2. systemctl start|stop|enable|disable firewalld.service
+停掉iptables功能 service iptables stop
+
+### SSH服务
+
+#### SSH服务介绍
+telnet所有传输都是明文传输
+
+安装telnet单机和服务端
+yum install telnet telnet-server xinetd
+
+启动
+systemctl start xinetd.service
+systemctl start telnet.socket
+rpm -ql telnet-server
+
+#### SSH服务配置文件
+- sshd_config
+Port22 默认端口
+PermitRootLogin yes是否允许root登录
+AuthorizedKeysFile.ssh/authorized_keys
+
+#### SSH命令
+1. systemctl status|start|stop|restart|enable|disable sshd.service
+ 
+2. 客户端命令
+ssh [-p端口] 用户@远程ip
+SecureCRT
+Xshell
+putty
+
+#### SSH公钥认证
+1. 密钥认证原理
+
+2. 常用命令
+ssh-keygen -t rsa
+ssh-copy-id
+```
+ssh-copy-id -i /root/.ssh/id_rsa.pub 用户@远程ip
+```
+
+#### scp和sftp远程拷贝
+常用命令
+scp
+```
+scp template.txt root@10.0.0.1:/tmp/
+```
+sftp
+winscp
+
+### FTP服务
+
+#### FTP服务介绍
+- FTP协议
+主动模式和被动模式
+
+#### vsftpd服务安装和启动
+1. yum install vsftpd ftp
+
+2. systemctl start vsftpd.service
+
+3. 建议将selinux改为permissive
+getsebool -a|grep ftpd
+setsebool -P <sebool> 1
+
+#### vsftpd服务配置文件
+/etc/vsftpd/vsftpd.conf
+/etc/vsftpd/ftpusers
+/etc/vsftpd/user_list
+
+!ls 查看本地文件
+
+#### FTP命令
+1. Linux客户端
+FTP命令
+
+2. Windows客户端
+资源管理器
+FTP工具
+
+#### 使用虚拟用户进行验证
+guest_enable=YES
+guest_username=vuser
+user_config_dir=/etc/vsftpd/vuserconfig
+allow_writeable_chroot=YES
+pam_service_name=vsftpd.vuser
+
+配置表目录
+/etc/vsftpd/vsftpd.conf
+
+配置详情：
+```
+anonymous_enable=NO             # disable  anonymous login
+local_enable=YES		# permit local logins
+write_enable=YES		# enable FTP commands which change the filesystem
+local_umask=022		        # value of umask for file creation for local users
+dirmessage_enable=YES	        # enable showing of messages when users first enter a new directory
+xferlog_enable=YES		# a log file will be maintained detailing uploads and downloads
+connect_from_port_20=YES        # use port 20 (ftp-data) on the server machine for PORT style connections
+xferlog_std_format=YES          # keep standard log file format
+listen=NO   			# prevent vsftpd from running in standalone mode
+listen_ipv6=YES		        # vsftpd will listen on an IPv6 socket instead of an IPv4 one
+pam_service_name=vsftpd         # name of the PAM service vsftpd will use
+userlist_enable=YES  	        # enable vsftpd to load a list of usernames
+tcp_wrappers=YES  		# turn on tcp wrappers
+
+userlist_enable=YES                   # vsftpd will load a list of usernames, from the filename given by userlist_file
+userlist_file=/etc/vsftpd.userlist    # stores usernames.
+userlist_deny=NO   
+
+chroot_local_user=YES
+allow_writeable_chroot=YES
+
+semanage boolean -m ftpd_full_access --on
+
+systemctl restart vsftpd
+```
+
+### Samba和NFS
+
+#### 常见共享服务的区别
+协议不同
+对操作系统的支持程度不同
+交互的便利性不同
+Server Messages Block
+
+#### Samba服务的安装
+yum install samba
+
+#### Samba服务的配置文件
+/etc/samba/smb.conf
+
+[share]
+	comment= my share
+	browseable = Yes
+	writable = Yes
+	path=/data/share
+	create mask = 0775
+	directory mask = 0775
+	admin users = username
+	valid users = username
+
+```
+关闭selinux
+chcon -t samba_share "share_folder_path"
+```
+
+#### Samba用户的设置
+
+samba是一种linux和windows之间进行文件共享的协议。安装该协议后，可以理解为在linux是插在windows上的一个U盘。
+
+1. smbpasswd命令
+-a 添加用户
+```
+smbpasswd -a username
+```
+-x 删除用户
+
+2. pdbedit
+-L 查看用户
+
+#### Samba服务的启动和停止
+1. systemctl start|stop smb.service
+
+2. Linux客户端（samba密码）
+mount -t cifs -o username=user1 //127.0.0.1/user1 /mnt
+
+3. Windows客户端
+资源管理器访问共享
+映射网络驱动器
+
+Windos上传文件到linux
+
+#### NFS服务的配置
+web集群中NFS服务器主要用于存储用户上传的信息，方便集群中机器获取用户数据。
+
+1. /etc/exports/data/share *(rw,rsync,all_squash)
+
+将远程访问的所有普通用户及所属组都映射为匿名用户或用户组
+
+```
+/data/share 10.0.0.1(ro) 10.0.0.2(rw)
+```
+2. showmount -e localhost
+3. 客户端使用挂载方式访问
+mount -t nfs localhost:/data/share /mnt
+4. 启动NFS服务
+systemctl start|stop nfs.service
+
+### Nginx
+
+#### Nginx
+
+1. Nginx和Web服务介绍
+Nginx是一个高性能的Web和反向代理服务器
+Nginx支持HTTP、HTTPS和电子邮件代理协议
+OpenResty是基于Nginx和Lua实现的Web应用网关，集成了大量的第三方模块
+
+2. OpenResty软件的下载和安装
+yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
+yum install openresty
+
+3. OpenResty的配置文件
+/usr/local/openresty/nginx/conf/nginx.conf
+service openresty start|stop|restart|reload
+ 
+4. 使用OpenResty配置域名虚拟主机
+```
+server {
+	listen 80;
+	server_name www.servera.com;
+	location /{
+		root html/servera;
+		index index.html index.htm;
+	}
+}
+```
+
+生效
+cd /usr/local/openresty/nginx/sbin
+./nginx -t
+
+重新启动
+cd /usr/local/openresty/nginx/sbin
+./nginx -s stop
+./nginx -s reload 热更新
+
+设置域名
+cd /usr/local/openresty/nginx/sbin
+vim /etc/hosts
+
+更改首页
+cd /usr/local/openresty/nginx/html
+mkdir servername
+echo servername > servera/index.html
+
+curl http://www.servera.html 检验
+
+### LNMP
+
+1. MySQL安装
+可以使用mariadb替代
+
+yum install mariadb mariadb-server
+
+修改默认编码
+vim /etc/my.cnf
+character_set_server=utf8
+init_connect='SET NAMES utf8'
+
+systemctl start mariadb.service
+show variables like '%character_set%';
+
+2. PHP安装
+- PHP安装
+yum install php-fpm php-mysql
+
+- 启动php-fpm
+system start php-fpm.service
+
+3. Nginx配置
+```
+location ~ \.php$ {
+	root html;
+	fastcgi_pass 127.0.0.1:9000;
+	fastcgi_index index.php;
+	fastcgi_param SCRIPT_FILENAME $document_root $fastcgi_script_name;
+	include fastcgi_params;
+}
+```
+
+### DNS服务的原理
+搭建主域名服务器
+1. DNS服务介绍
+- DNS（Domain Name System）域名系统
+- FQDN（Full Qualified Domain Name）完全限定域名
+- 域分类：根域、顶级域（TLD）
+- 查询方式：递归、迭代
+- 解析方式：正向解析、反向解析
+- DNS服务器的类型：缓存域名服务器、主域名服务器、从域名服务器
+
+2. BIND软件的安装
+/etc/hosts
+yum install bind bind-utils
+systemctl start named.service
+
+3. BIND的配置文件
+/etc/named.conf
+named-checkconf
+rndc-reload
+
+```
+listen-on port { any; }; 如果127.0.0.1只有自己能查询，改为any
+allow-query { any; };
+zone "test.com" IN {
+	type master;
+	file "test.com.zone";
+	allow-transfer { 10.211.55.3; };
+}
+```
+/var/named/ 下有named.ca文件
+```
+$TTL 1D
+@	 IN SOA @ns1.test.com. (
+				   0    ;serial
+				   1D    ;refresh
+				   1H    ;retry
+				   1W    ;expire
+				   3H   ;minimum
+)
+@	 IN NS ns1
+ns1  IN A  10.211.55.3
+www  IN A  10.20.0.100
+mail IN CNAME  mailexchange
+mailexchange IN A 10.20.0.200
+```
+
+4. 使用dig和nslookup命令测试DNS
+nslookup
+dig @DNSSERVER Domain
+
+5. 从域名服务器的配置
+
+```
+zone "test.com" IN {
+	type slave;
+	file "slaves/test.com.zone";
+	masters { 10.211.55.3; };
+};
+```
+
+反向解析配置文件
+```
+zone "0.20.10.in-addr.arpa" IN {
+	type master;
+	file "10.20.0.zone";
+};
+100 IN PTR www.test.com
+```
+
+### NAS
+
+NAS(Network Attached Storage)网络附属存储
+NAS支持的协议NFS、CIFS、FTP
+保证数据安全方式 磁盘阵列
