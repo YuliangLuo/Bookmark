@@ -1,0 +1,1042 @@
+# Core Linear Algebra Concepts in AI
+
+## 0. Big Picture
+
+Many core AI operations are built on a small set of linear algebra concepts:
+
+```text
+Vectors represent objects
+Matrices transform objects
+Dot products compare similarity
+Rank detects redundant information
+Projection keeps information in selected directions
+Orthogonalization makes directions independent and computation stable
+```
+
+In one sentence:
+
+> AI converts words, images, users, documents, and other objects into vectors, transforms those vectors with matrices, and uses dot products, projection, and rank to compare, compress, and process information.
+
+---
+
+## 1. Vector
+
+### 1.1 What is a vector?
+
+A vector is a list of numbers.
+
+Example:
+
+```text
+[3, 2]
+```
+
+This can represent a point on a 2D plane, or a direction from the origin `(0, 0)` to `(3, 2)`.
+
+In AI, vectors are used to represent different types of objects:
+
+| Object | Vector Representation |
+|---|---|
+| A word | Word vector |
+| A sentence | Sentence vector |
+| An image | Image vector |
+| A user | Preference vector |
+| A document | Document vector |
+| An item | Item vector |
+
+Plain-English meaning:
+
+> A vector is the numerical coordinate representation of an object.
+
+---
+
+### 1.2 Direction and magnitude
+
+A vector has two important properties:
+
+```text
+Direction
+Magnitude
+```
+
+For example:
+
+```text
+v = [3, 2]
+```
+
+Its magnitude is:
+
+```text
+|v| = sqrt(3^2 + 2^2) = sqrt(13)
+```
+
+Its direction describes where it points in space.
+
+In AI:
+
+```text
+Direction often represents meaning, preference, or feature pattern
+Magnitude may represent strength, confidence, or weight
+```
+
+Plain-English meaning:
+
+> A vector is not just a list of numbers. It also has a direction and a size.
+
+---
+
+## 2. Matrix
+
+### 2.1 What is a matrix?
+
+A matrix can be understood as a vector transformation machine.
+
+It takes one vector as input and produces another vector as output:
+
+```text
+input vector → matrix → output vector
+```
+
+Mathematically:
+
+```text
+y = xW + b
+```
+
+Where:
+
+| Symbol | Meaning |
+|---|---|
+| `x` | Input vector |
+| `W` | Weight matrix |
+| `b` | Bias |
+| `y` | Output vector |
+
+Plain-English meaning:
+
+> A matrix transforms one vector into another vector.
+
+---
+
+### 2.2 What can a matrix do?
+
+A matrix can perform many types of transformations:
+
+```text
+Rotation
+Scaling
+Stretching
+Compression
+Projection
+Dimension expansion
+Dimension reduction
+```
+
+Example:
+
+```text
+Raw feature vector → matrix transformation → higher-level feature vector
+```
+
+In a neural network, each layer can be viewed as:
+
+```text
+input vector → weight matrix → activation function → output vector
+```
+
+Plain-English meaning:
+
+> A matrix is a learned transformation rule.
+
+---
+
+## 3. What Does “Matrices ARE the Model” Mean?
+
+This does not mean that AI models contain only matrices.
+
+It means:
+
+> The most important, largest, and most trainable parts of neural networks are usually matrix parameters.
+
+Common matrices in large language models include:
+
+```text
+Embedding Matrix
+Query Matrix
+Key Matrix
+Value Matrix
+Feed Forward Matrix
+Output Matrix
+```
+
+The values inside these matrices are learned during training.
+
+Before training:
+
+```text
+Matrix parameters are mostly random
+```
+
+After training:
+
+```text
+Matrix parameters encode language patterns, semantic relationships, and reasoning patterns
+```
+
+Typical flow:
+
+```text
+Input token
+  ↓
+Embedding matrix
+  ↓
+Vector representation
+  ↓
+Attention matrices
+  ↓
+Context-aware representation
+  ↓
+Feed Forward matrices
+  ↓
+Feature transformation
+  ↓
+Output matrix
+  ↓
+Next-token probability
+```
+
+Plain-English meaning:
+
+> A model’s capability is not stored as hand-written if-else rules. It is stored in a large number of trained matrix parameters.
+
+---
+
+## 4. Embedding
+
+### 4.1 What is an embedding?
+
+An embedding converts a discrete object into a continuous vector.
+
+Words cannot be directly used in mathematical computation:
+
+```text
+"battery"
+"voltage"
+"cat"
+"city"
+```
+
+So the model converts them into vectors:
+
+```text
+battery → [0.12, -0.33, 0.81, ...]
+voltage → [0.18, -0.29, 0.76, ...]
+cat     → [-0.22, 0.45, 0.10, ...]
+city    → [0.51, -0.08, 0.39, ...]
+```
+
+These vectors are not manually defined. They are learned during training.
+
+Plain-English meaning:
+
+> An embedding translates objects into numerical coordinates that AI can compute with.
+
+---
+
+### 4.2 Why embeddings matter
+
+A well-trained embedding space places semantically similar objects close to each other.
+
+Examples:
+
+```text
+"king" is closer to "queen"
+"cat" is closer to "dog"
+"battery" is closer to "voltage"
+"cat" is farther from "database"
+```
+
+In other words:
+
+```text
+Similar meaning → similar vector direction
+Unrelated meaning → farther apart in vector space
+```
+
+Embeddings are used in:
+
+```text
+Search
+Recommendation
+RAG
+Clustering
+Classification
+Semantic matching
+```
+
+Plain-English meaning:
+
+> Embedding is how AI turns meaning into math.
+
+---
+
+## 5. Dot Product
+
+### 5.1 Dot product formula
+
+Given two vectors:
+
+```text
+a = [a1, a2, ..., an]
+b = [b1, b2, ..., bn]
+```
+
+The dot product is:
+
+```text
+a · b = a1*b1 + a2*b2 + ... + an*bn
+```
+
+That means:
+
+> Multiply corresponding positions and add all results together.
+
+Example:
+
+```text
+a = [1, 2]
+b = [2, 4]
+
+a · b = 1*2 + 2*4 = 10
+```
+
+Plain-English meaning:
+
+> The dot product is a numerical score between two vectors.
+
+---
+
+### 5.2 Geometric meaning
+
+The dot product can also be written as:
+
+```text
+a · b = |a| * |b| * cos(θ)
+```
+
+Where:
+
+| Symbol | Meaning |
+|---|---|
+| `|a|` | Magnitude of vector `a` |
+| `|b|` | Magnitude of vector `b` |
+| `θ` | Angle between the two vectors |
+
+The dot product depends on both:
+
+```text
+Direction
+Magnitude
+```
+
+Plain-English meaning:
+
+> The dot product is large when two vectors point in a similar direction and have large magnitude.
+
+---
+
+### 5.3 Dot product and similarity
+
+| Vector Relationship | Dot Product Result | Meaning |
+|---|---:|---|
+| Similar direction | Positive and large | Similar |
+| Perpendicular | Zero | No clear relationship |
+| Opposite direction | Negative | Dissimilar / opposite |
+
+Example 1:
+
+```text
+a = [1, 2]
+b = [2, 4]
+
+a · b = 10
+```
+
+The vectors point in a similar direction, so the dot product is large.
+
+Example 2:
+
+```text
+a = [1, 0]
+b = [0, 1]
+
+a · b = 0
+```
+
+The vectors are perpendicular, so the dot product is zero.
+
+Example 3:
+
+```text
+a = [1, 0]
+b = [-1, 0]
+
+a · b = -1
+```
+
+The vectors point in opposite directions.
+
+Plain-English meaning:
+
+> The dot product is a scoring method for checking whether two vectors point in a similar direction.
+
+---
+
+## 6. Dot Product in Search, Recommendation, and RAG
+
+### 6.1 Search systems
+
+A search system converts both the user query and documents into vectors:
+
+```text
+query → query_vector
+document → document_vector
+```
+
+Then it calculates:
+
+```text
+score = query_vector · document_vector
+```
+
+A higher score means the document is more relevant to the query.
+
+Plain-English meaning:
+
+> Search can be understood as finding documents whose vectors point in the same direction as the query vector.
+
+---
+
+### 6.2 Recommendation systems
+
+A recommendation system converts users and items into vectors:
+
+```text
+user → user_vector
+item → item_vector
+```
+
+Then it calculates:
+
+```text
+score = user_vector · item_vector
+```
+
+A higher score means the user is more likely to be interested in that item.
+
+Plain-English meaning:
+
+> Recommendation is matching user vectors with item vectors.
+
+---
+
+### 6.3 RAG
+
+The retrieval stage of RAG follows the same idea:
+
+```text
+User question
+  ↓
+Embedding Model
+  ↓
+Query vector
+  ↓
+Compare with knowledge-base chunk vectors
+  ↓
+Select Top-K relevant chunks
+  ↓
+Send chunks to the LLM for answer generation
+```
+
+Plain-English meaning:
+
+> RAG converts a question into a vector, then searches for document chunks whose vectors point in the most similar direction.
+
+---
+
+## 7. Cosine Similarity
+
+### 7.1 Why cosine similarity is needed
+
+The dot product is affected by two factors:
+
+```text
+Direction
+Magnitude
+```
+
+Sometimes we only care about direction and do not want magnitude to dominate the similarity score.
+
+This is where cosine similarity is used:
+
+```text
+cos(θ) = (a · b) / (|a| * |b|)
+```
+
+If vectors are normalized first:
+
+```text
+a_normalized = a / |a|
+b_normalized = b / |b|
+```
+
+Then:
+
+```text
+a_normalized · b_normalized = cos(θ)
+```
+
+Plain-English meaning:
+
+> Cosine similarity focuses mainly on whether two vectors point in the same direction.
+
+---
+
+### 7.2 Dot product vs cosine similarity
+
+| Method | What it considers | Common usage |
+|---|---|---|
+| Dot Product | Direction + magnitude | Attention, ranking, neural network computation |
+| Cosine Similarity | Direction only | Vector search, semantic retrieval, RAG |
+| Euclidean Distance | Physical distance in vector space | Clustering, nearest-neighbor search |
+
+Plain-English meaning:
+
+> Dot product cares about direction and size. Cosine similarity mostly cares about direction.
+
+---
+
+## 8. Attention
+
+### 8.1 What does attention do?
+
+Attention can be understood as:
+
+> When processing the current token, which other tokens should the model focus on?
+
+Example sentence:
+
+```text
+The battery voltage is low
+```
+
+When the model processes `low`, it needs to know what is low.
+
+A possible attention relationship is:
+
+```text
+low → voltage
+voltage → battery
+```
+
+Plain-English meaning:
+
+> Attention lets each token decide which other tokens are important.
+
+---
+
+### 8.2 Attention score matrix
+
+If a sentence has 5 tokens, the attention score matrix is roughly:
+
+```text
+5 × 5
+```
+
+It represents:
+
+```text
+How much each token attends to every other token
+```
+
+Example:
+
+| Current Token | battery | voltage | is | low |
+|---|---:|---:|---:|---:|
+| low | Medium | High | Low | Self |
+| voltage | High | Self | Low | Medium |
+
+Plain-English meaning:
+
+> The attention matrix is the model’s internal attention allocation table.
+
+---
+
+### 8.3 Attention and dot product
+
+A common Transformer attention formula is:
+
+```text
+Attention(Q, K, V) = softmax(QK^T / sqrt(d))V
+```
+
+Where:
+
+| Matrix | Meaning |
+|---|---|
+| `Q` | Query: what the current token is looking for |
+| `K` | Key: what each token can provide |
+| `V` | Value: the actual information carried by each token |
+| `QK^T` | Dot products between queries and keys |
+| `softmax(QK^T)` | Attention weights |
+
+Essentially:
+
+```text
+attention_score = query_vector · key_vector
+```
+
+A larger dot product means the current token should pay more attention to another token.
+
+Plain-English meaning:
+
+> The dot product inside attention measures how relevant one token is to another token.
+
+---
+
+## 9. Linear Independence
+
+### 9.1 What is linear independence?
+
+A vector is linearly independent if it cannot be created by combining other vectors.
+
+Example:
+
+```text
+v1 = [1, 0, 0]
+v2 = [0, 1, 0]
+v3 = [2, 1, 0]
+```
+
+Because:
+
+```text
+v3 = 2*v1 + v2
+```
+
+`v3` does not provide a new direction.
+
+Therefore:
+
+```text
+v1 and v2 are independent
+v3 depends on v1 and v2
+```
+
+Plain-English meaning:
+
+> Linear independence tells us whether a vector provides a new direction or new information.
+
+---
+
+### 9.2 Meaning in machine learning
+
+If a dataset contains:
+
+```text
+feature_3 = 2*feature_1 + feature_2
+```
+
+Then `feature_3` provides no new information.
+
+This can cause:
+
+```text
+Feature redundancy
+Unstable weights
+Non-invertible matrices
+Non-unique least-squares solutions
+Sensitivity to noise
+```
+
+Plain-English meaning:
+
+> If multiple features are duplicated or highly correlated, the model may struggle to assign stable importance to each feature.
+
+---
+
+## 10. Basis
+
+### 10.1 What is a basis?
+
+A basis is a minimal set of linearly independent vectors.
+
+They can be combined to represent the entire space.
+
+The standard basis for 3D space is:
+
+```text
+[1, 0, 0]
+[0, 1, 0]
+[0, 0, 1]
+```
+
+These correspond to:
+
+```text
+x-axis
+y-axis
+z-axis
+```
+
+Plain-English meaning:
+
+> A basis is the smallest set of fundamental directions needed to represent every point in a space.
+
+---
+
+### 10.2 Basis as a coordinate system
+
+A valid basis must satisfy two conditions:
+
+```text
+1. The vectors are linearly independent
+2. The vectors can represent the entire space
+```
+
+Changing the basis means changing the coordinate system.
+
+The same point can be described using different bases.
+
+Plain-English meaning:
+
+> A basis defines how we describe positions and directions in a space.
+
+---
+
+## 11. Rank
+
+### 11.1 What is rank?
+
+The rank of a matrix can be understood as:
+
+```text
+The number of truly independent pieces of information in the matrix
+```
+
+It can also be understood as:
+
+```text
+How many independent directions the matrix can represent
+```
+
+Plain-English meaning:
+
+> Rank tells us how many effective independent information dimensions a matrix has.
+
+---
+
+### 11.2 Common rank situations
+
+| Situation | Meaning | Impact on Machine Learning |
+|---|---|---|
+| Full Rank | Information is complete; columns are independent | More stable model |
+| Rank Deficient | Redundant features exist | Non-unique solutions; instability |
+| Rank 1 | All columns are scaled versions of one direction | Data has almost only one effective direction |
+| Near Rank Deficient | Almost redundant | Sensitive to noise; numerically unstable |
+
+Plain-English meaning:
+
+> Low rank means the matrix contains redundant or compressed information.
+
+---
+
+### 11.3 Why rank matters in AI
+
+Rank matters because it affects:
+
+```text
+Information capacity
+Feature redundancy
+Numerical stability
+Invertibility
+Training behavior
+Model compression
+```
+
+If a matrix is rank-deficient:
+
+```text
+Some information is lost
+Some features are redundant
+The solution may not be unique
+The system may be unstable
+```
+
+Plain-English meaning:
+
+> Rank is a way to measure how much independent information is actually present.
+
+---
+
+## 12. Projection
+
+### 12.1 What is projection?
+
+Projection means:
+
+```text
+Keep only the component in a selected direction
+```
+
+Example:
+
+```text
+a = [3, 4]
+b = [1, 0]
+```
+
+Projecting `a` onto `b`, which is the x-axis direction, gives:
+
+```text
+proj_b(a) = [3, 0]
+```
+
+The original y-component `4` is removed.
+
+Plain-English meaning:
+
+> Projection means looking only at the direction you care about and ignoring the rest.
+
+---
+
+### 12.2 Projection formula
+
+```text
+proj_b(a) = (a · b / b · b) * b
+```
+
+Where:
+
+```text
+a · b
+```
+
+measures how much of `a` lies in the direction of `b`.
+
+The part that remains after projection is the residual:
+
+```text
+residual = a - proj_b(a)
+```
+
+The residual is perpendicular to the projection direction.
+
+Plain-English meaning:
+
+> Projection splits a vector into the part aligned with a direction and the part left over.
+
+---
+
+### 12.3 Projection in machine learning
+
+| Scenario | Meaning of Projection |
+|---|---|
+| Linear Regression | Project observations onto the feature space |
+| PCA | Project data onto directions of maximum variance |
+| Dimensionality Reduction | Keep important directions and discard less important ones |
+| Attention | Match Query direction with Key direction |
+
+Plain-English meaning:
+
+> Projection is a foundation of dimensionality reduction, regression, PCA, and attention.
+
+---
+
+## 13. Gram-Schmidt Process
+
+### 13.1 What is Gram-Schmidt?
+
+Gram-Schmidt is a method for converting a set of linearly independent but non-standard vectors into vectors that are:
+
+```text
+Mutually perpendicular
+Length 1
+Non-redundant
+```
+
+Such vectors are called:
+
+```text
+orthonormal basis
+```
+
+Plain-English meaning:
+
+> Gram-Schmidt turns messy independent directions into clean perpendicular unit directions.
+
+---
+
+### 13.2 Process
+
+Given:
+
+```text
+v1, v2, v3, ...
+```
+
+The process is:
+
+```text
+1. Keep the first direction and normalize it
+2. Remove from the second direction the part overlapping with the first, then normalize it
+3. Remove from the third direction the parts overlapping with the previous directions, then normalize it
+4. Repeat until all vectors are processed
+```
+
+The result is:
+
+```text
+u1, u2, u3, ...
+```
+
+These vectors are:
+
+```text
+Mutually perpendicular
+Length 1
+No directional redundancy
+```
+
+Plain-English meaning:
+
+> Gram-Schmidt performs de-duplication, straightening, and normalization on a set of directions.
+
+---
+
+### 13.3 Relationship with QR decomposition
+
+Gram-Schmidt is one way to understand QR decomposition.
+
+QR decomposition:
+
+```text
+A = QR
+```
+
+Where:
+
+| Matrix | Meaning |
+|---|---|
+| `Q` | Orthonormal basis matrix |
+| `R` | Projection coefficient matrix |
+
+QR decomposition is commonly used for:
+
+```text
+Solving linear systems
+Least-squares regression
+Eigenvalue computation
+Numerically stable computation
+```
+
+Plain-English meaning:
+
+> QR decomposition separates a matrix into clean directions and the coefficients needed to combine them.
+
+---
+
+## 14. Overall AI Workflow
+
+A linear algebra view of AI can be described as:
+
+```text
+Raw object
+  ↓
+Vectorization / Embedding
+  ↓
+Matrix transformation
+  ↓
+Nonlinear activation
+  ↓
+Multi-layer feature extraction
+  ↓
+Dot product / similarity calculation
+  ↓
+Classification, recommendation, search result, or text generation
+```
+
+For Transformers:
+
+```text
+Token
+  ↓
+Embedding
+  ↓
+Q/K/V matrix transformations
+  ↓
+QK^T dot product attention scores
+  ↓
+softmax attention weights
+  ↓
+Weighted aggregation of Value vectors
+  ↓
+Feed Forward matrix transformation
+  ↓
+Next-token probability output
+```
+
+Plain-English meaning:
+
+> Transformer models are built from repeated vector representations, matrix transformations, dot products, and nonlinear operations.
+
+---
+
+## 15. Core Concept Comparison Table
+
+| Concept | Plain-English Meaning | Role in AI |
+|---|---|---|
+| Vector | Numerical representation of an object | Represents words, images, users, documents |
+| Matrix | A machine that transforms vectors | Neural network weights and feature transformation |
+| Weight Matrix | Learned parameter table | Maps input to output |
+| Embedding | Converts objects into vectors | Semantic representation |
+| Dot Product | Checks whether directions are similar | Similarity calculation |
+| Cosine Similarity | Compares direction only | Vector search and RAG |
+| Attention Matrix | Table of who should focus on whom | Context modeling in Transformers |
+| Linear Independence | Whether something adds new information | Detects redundant features |
+| Basis | Minimal set of fundamental directions | Defines a coordinate system |
+| Rank | Amount of truly independent information | Checks information completeness |
+| Projection | Keeps information in selected directions | Regression, PCA, dimensionality reduction |
+| Orthogonalization | Removes directional overlap | Improves numerical stability |
+| Gram-Schmidt Process | De-duplicates, straightens, and normalizes directions | QR decomposition and stable solving |
+
+---
+
+## 16. Final Summary
+
+Linear algebra in AI can be summarized as:
+
+```text
+Vectors represent objects.
+Matrices transform objects.
+Dot products compare objects.
+Rank detects redundant information.
+Projection keeps important directions.
+Orthogonalization improves numerical stability.
+```
+
+More abstractly:
+
+```text
+AI = high-dimensional representation
+   + matrix transformation
+   + similarity computation
+   + information compression
+   + numerical stability optimization
+```
+
+The most important idea is:
+
+> AI does not directly understand words, images, or documents.  
+> It converts them into vectors, transforms them with matrices, compares them with dot products, and organizes information through projection, rank, and orthogonalization.
